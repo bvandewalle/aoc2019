@@ -71,7 +71,7 @@ func generate(softInput chan int64, softOutput chan int64, input []int64) {
 		entry2 := getParam(mem, int64(pos+2), mode2, relative)
 		entry3 := getMem(mem, int64(pos+3), mode3, relative)
 
-		fmt.Printf("POS %d, INPUT %d, OPCODE %d, RELATIVE %d,ENTRY1: %d, ENTRY2: %d\n", pos, input[pos], opCode, relative, entry1, entry2)
+		//fmt.Printf("POS %d, INPUT %d, OPCODE %d, RELATIVE %d,ENTRY1: %d, ENTRY2: %d\n", pos, input[pos], opCode, relative, entry1, entry2)
 		switch opCode {
 		case 99:
 			close(softOutput)
