@@ -73,26 +73,91 @@ func main() {
 		"3 QLJXM, 11 FNWBZ, 3 WBPFQ => 5 QGNL",
 	}
 
-	first(input)
+	second(input)
 }
 
 func first(input []string) {
 	fmt.Printf("%+v", parse(input))
 
 	got := map[string]int{}
-	ore := next(parse(input), "FUEL", got)
+	next(parse(input), "FUEL", got)
 
-	fmt.Println(ore)
+	fmt.Println(got["ORE"])
+}
+
+func second(input []string) {
+
+	pinput := parse(input)
+	available := 1000000000000
+
+	got := map[string]int{}
+	next(pinput, "FUEL", got)
+
+	orerequired := got["ORE"]
+
+	fuelstupid := available / orerequired
+	oreleftover := available % orerequired
+
+	for k, v := range got {
+		got[k] = v * fuelstupid
+	}
+	got["ORE"] = oreleftover
+	got["FUEL"] = 0
+
+	fmt.Printf("GOT: %+v \t fuelstupid: %d\n", got, fuelstupid)
+
+	for k := range got {
+		invert(pinput, k, got)
+	}
+	fmt.Printf("GOT: %+v \t fuelstupid: %d\n", got, fuelstupid)
+
+	steps := []int{1000, 100, 10, 1}
+
+	for _, step := range steps {
+		for next2(pinput, "FUEL", step, got) {
+			fuelstupid += step
+			got["FUEL"] = 0
+			//fmt.Printf("GOT: %+v \t fuelstupid: %d\n", got, fuelstupid)
+			fmt.Printf("ORE: %d\t FUEL: %d\n", got["ORE"], fuelstupid)
+		}
+		fmt.Printf("GOT: %+v \t fuelstupid: %d\n", got, fuelstupid)
+		for k := range got {
+			invert(pinput, k, got)
+		}
+	}
+	fmt.Printf("GOT: %+v \t fuelstupid: %d\n", got, fuelstupid)
 
 }
 
-func next(eqs map[string]map[string]int, current string, got map[string]int) int {
-
-	fmt.Printf("CURRENT: %s \t GOT: %+v \n", current, got)
+func invert(eqs map[string]map[string]int, current string, got map[string]int) {
+	if current == "ORE" {
+		return
+	}
+	//fmt.Println(current)
 
 	requirements := eqs[current]
 
-	ore := 0
+	for got[current] >= requirements[current] {
+
+		a := got[current] / requirements[current]
+
+		for req, amount := range requirements {
+			if req == current {
+				got[req] -= a * amount
+				continue
+			}
+
+			got[req] += a * amount
+
+			invert(eqs, req, got)
+		}
+	}
+}
+
+func next(eqs map[string]map[string]int, current string, got map[string]int) {
+	//fmt.Printf("CURRENT: %s \t GOT: %+v \n", current, got)
+
+	requirements := eqs[current]
 
 	for req, amount := range requirements {
 		if req == current {
@@ -101,18 +166,60 @@ func next(eqs map[string]map[string]int, current string, got map[string]int) int
 		}
 
 		if req == "ORE" {
-			ore += amount
+			got["ORE"] += amount
 			continue
 		}
 
 		for got[req] < amount {
-			ore += next(eqs, req, got)
+			next(eqs, req, got)
 		}
 
 		got[req] -= amount
 	}
+}
 
-	return ore
+func next2(eqs map[string]map[string]int, current string, want int, got map[string]int) bool {
+
+	requirements := eqs[current]
+
+	needed := want - got[current]
+	reactionNeeded := (needed / requirements[current])
+	if needed%requirements[current] != 0 {
+		reactionNeeded++
+	}
+
+	//fmt.Printf("CURRENT: %s \t GOT: %+v \t WANT %d \t REACTION %d\n", current, got, want, reactionNeeded)
+
+	for req, amount := range requirements {
+		if req == current {
+			continue
+		}
+
+		if req == "ORE" {
+			if got["ORE"] < reactionNeeded*amount {
+				return false
+			}
+		}
+
+		for got[req] < reactionNeeded*amount {
+			if !next2(eqs, req, reactionNeeded*amount, got) {
+				return false
+			}
+		}
+
+	}
+
+	for req, amount := range requirements {
+		if req == current {
+			continue
+		}
+
+		got[req] -= reactionNeeded * amount
+	}
+
+	got[current] += reactionNeeded * requirements[current]
+
+	return true
 }
 
 func parse(input []string) map[string]map[string]int {
