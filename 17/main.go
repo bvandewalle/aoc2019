@@ -132,7 +132,7 @@ func second(input []int64) {
 		fmt.Println(path)
 		fmt.Printf("%s%s%s%s%s%s%s%s%s%s\n", a, b, b, a, c, b, c, c, b, a)
 
-		iter := []string{funcs, a, b, c, "n"}
+		iter := []string{funcs, a, b, c, "y"}
 
 		for _, str := range iter {
 			for _, c := range str {
